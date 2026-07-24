@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang=""en"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>orkout</title>
+<style>
+  :root {
+    --blue: #007aff;
+    --bg: #f2f2f7;
+    --text: #1c1c1e;
+    --muted: #8e8e93;
+    --border: #e5e5ea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .title { font-size: 30px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+  .list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 50px 0; color: #c7c7cc; }
+  .empty-text { font-size: 15px; color: var(--muted); }
+  .card { background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .card-header-left { display: flex; align-items: center; gap: 12px; }
+  .stats-row { display: flex; gap: 10px; margin-top: 14px; }
+  .stat-box { flex: 1; background: var(--bg); border-radius: 12px; padding: 8px 12px; }
+  .stat-label { font-size: 12px; color: var(--muted); }
+  .stat-value { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .sets-table-head { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--muted); padding: 0 2px; }
+  .set-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .set-input {
+    flex: 1; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: #f9f9fb;
+    text-align: center; font-size: 15px; outline: none; width: 0;
+  }
+  .remove-btn { width: 24px; height: 24px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .add-set-row { display: flex; gap: 8px; margin-top: 12px; }
+  .small-btn {
+    flex: 1; height: 34px; border-radius: 9px; border: none; background: var(--blue); color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .small-btn-ghost {
+    flex: 1; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: #fff; color: #3a3a3c;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  input[type="checkbox"] { width: 18px; height: 18px; }
+  .icon-circle {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--bg);
+    display: flex; align-items: center; justify-content: center; color: var(--blue); flex-shrink: 0;
+  }
+  .icon-circle-sm {
+    width: 30px; height: 30px; border-radius: 50%; background: var(--bg);
+    display: flex; align-items: center; justify-content: center; color: var(--blue); flex-shrink: 0;
+  }
+  .ex-name { font-size: 16px; font-weight: 600; }
+  .ex-meta { font-size: 13px; color: var(--muted); margin-top: 1px; }
+  .add-exercise-btn {
+    width: 100%; margin-top: 16px; height: 48px; border-radius: 14px; border: none; background: var(--blue);
+    color: #fff; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+    gap: 8px; cursor: pointer;
+  }
+  .picker-card { margin-top: 16px; background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .picker-title { font-size: 16px; font-weight: 600; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .picker-list { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+  .picker-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; border: none;
+    background: transparent; font-size: 15px; color: var(--text); cursor: pointer; text-align: left; width: 100%;
+  }
+  .picker-item:hover { background: var(--bg); }
+  .picker-cat { font-size: 12px; color: var(--muted); }
+  .new-exercise-btn {
+    margin-top: 10px; width: 100%; height: 40px; border-radius: 10px; border: 1px dashed #c7c7cc; background: transparent;
+    color: var(--blue); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+    gap: 6px; cursor: pointer;
+  }
+  .new-exercise-form { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .text-input { height: 38px; border-radius: 10px; border: 1px solid var(--border); background: #f9f9fb; padding: 0 12px; font-size: 15px; outline: none; width: 100%; }
+  .category-row { display: flex; gap: 8px; }
+  .category-chip {
+    flex: 1; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: #3a3a3c; cursor: pointer;
+  }
+  .category-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .confirm-btn { height: 40px; border-radius: 10px; border: none; background: #34c759; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+</style>
+</head>head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------- Icons (simple Apple-style SVGs) ---------- */
+const ICONS = {
+  dumbbell: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5"/><path d="M2 8 5 5"/><path d="M22 16l-3 3"/><path d="M14.5 3.5l4 4"/><path d="M3.5 14.5l4 4"/><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><path d="M9 5l-2 2"/><path d="M17 19l2-2"/></svg>',
+  machine: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  cardio: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M4 17l4-2 2-4"/><path d="M10 11l2 2 5-2"/><path d="M12 13l-1 4 4 4"/><path d="M6 21l3-4"/></svg>',
+  x: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>',
+  chevronDown: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  chevronUp: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>',
+  plus: '<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+};
+function icon(name, size) { return ICONS[name].replaceAll("{s}", size || 18); }
+
+/* ---------- Categories & exercises ---------- */
+const CATEGORY_META = {
+  free: { label: "Free weight", icon: "dumbbell" },
+  machine: { label: "Machine", icon: "machine" },
+  cardio: { label: "Cardio", icon: "cardio" },
+};
+
+const DEFAULT_EXERCISES = [
+  { id: "bench", name: "Bench Press", category: "free" },
+  { id: "squat", name: "Squat", category: "free" },
+  { id: "legpress", name: "Leg Press", category: "machine" },
+  { id: "lat", name: "Lat Pulldown", category: "machine" },
+  { id: "run", name: "Treadmill", category: "cardio" },
+];
+
+/* ---------- Helpers ---------- */
+function epley1RM(weight, reps) { if (!weight || !reps) return 0; return weight * (1 + reps / 30); }
+
+/* ---------- App state ---------- */
+const state = {
+  exercises: [...DEFAULT_EXERCISES],
+  activeIds: [],       // ids of exercises added to today's list
+  session: {},          // exId -> [{id, weight, reps, warmup}]
+  expanded: {},          // exId -> bool
+  showPicker: false,
+  showAdd: false,
+  newName: "",
+  newCategory: "free",
+};
+
+function addExerciseToSession(id) {
+  if (!state.activeIds.includes(id)) state.activeIds.push(id);
+  if (!state.session[id]) state.session[id] = [];
+  state.expanded[id] = true;
+  state.showPicker = false;
+  render();
+}
+
+function addSet(exId, warmup) {
+  state.session[exId].push({ id: Date.now(), weight: "", reps: "", warmup });
+  render();
+}
+function updateSet(exId, setId, field, value) {
+  const st = state.session[exId].find(s => s.id === setId);
+  st[field] = value;
+}
+function removeSet(exId, setId) {
+  state.session[exId] = state.session[exId].filter(s => s.id !== setId);
+  render();
+}
+function exerciseStats(exId) {
+  const sets = state.session[exId] || [];
+  let volume = 0, best1RM = 0;
+  sets.forEach(st => {
+    const w = parseFloat(st.weight) || 0, r = parseInt(st.reps) || 0;
+    if (!st.warmup) {
+      volume += w * r;
+      const rm = epley1RM(w, r);
+      if (rm > best1RM) best1RM = rm;
+    }
+  });
+  return { volume, best1RM };
+}
+
+function createExercise() {
+  const name = state.newName.trim();
+  if (!name) return;
+  const id = name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
+  state.exercises.push({ id, name, category: state.newCategory });
+  state.newName = "";
+  state.showAdd = false;
+  addExerciseToSession(id);
+}
+
+/* ---------- Rendering ---------- */
+function render() {
+  const app = document.getElementById("app");
+  const availableToAdd = state.exercises.filter(e => !state.activeIds.includes(e.id));
+
+  let html = `
+    <h1 class="title">Workout</h1>
+    <div class="list">
+  `;
+
+  if (state.activeIds.length === 0) {
+    html += `<div class="empty-state">${icon("dumbbell", 32)}<p class="empty-text">No exercises yet for this day</p></div>`;
+  }
+
+  state.activeIds.forEach(exId => {
+    const ex = state.exercises.find(e => e.id === exId);
+    if (!ex) return;
+    const sets = state.session[exId] || [];
+    const stats = exerciseStats(exId);
+    const isOpen = state.expanded[exId] !== false;
+
+    html += `<div class="card">
+      <div class="card-header" data-toggle="${exId}">
+        <div class="card-header-left">
+          <div class="icon-circle">${icon(CATEGORY_META[ex.category].icon)}</div>
+          <div>
+            <div class="ex-name">${ex.name}</div>
+            <div class="ex-meta">${CATEGORY_META[ex.category].label}</div>
+          </div>
+        </div>
+        ${isOpen ? icon("chevronUp") : icon("chevronDown")}
+      </div>
+      ${isOpen ? `
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-label">Volume</div><div class="stat-value">${Math.round(stats.volume)} kg</div></div>
+          <div class="stat-box"><div class="stat-label">Estimated 1RM</div><div class="stat-value">${stats.best1RM ? Math.round(stats.best1RM) : "–"} kg</div></div>
+        </div>
+        ${sets.length > 0 ? `
+        <div class="sets-table-head">
+          <span style="width:28px">#</span><span style="flex:1">kg</span><span style="flex:1">Reps</span>
+          <span style="width:60px;text-align:center">Warm-up</span><span style="width:24px"></span>
+        </div>` : ""}
+        ${sets.map((st, i) => `
+          <div class="set-row">
+            <span style="width:28px;color:#8e8e93;font-size:14px">${i + 1}</span>
+            <input class="set-input" type="number" placeholder="0" value="${st.weight}" data-weight="${exId}|${st.id}" />
+            <input class="set-input" type="number" placeholder="0" value="${st.reps}" data-reps="${exId}|${st.id}" />
+            <div style="width:60px;display:flex;justify-content:center">
+              <input type="checkbox" ${st.warmup ? "checked" : ""} data-warmup="${exId}|${st.id}" />
+            </div>
+            <button class="remove-btn" data-remove="${exId}|${st.id}">${icon("x", 14)}</button>
+          </div>
+        `).join("")}
+        <div class="add-set-row">
+          <button class="small-btn-ghost" data-addset="${exId}|warmup">+ Warm-up set</button>
+          <button class="small-btn" data-addset="${exId}|normal">+ Set</button>
+        </div>
+      ` : ""}
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  if (!state.showPicker) {
+    html += `<button class="add-exercise-btn" id="openPicker">${icon("plus")} Add exercise</button>`;
+  }
+
+  if (state.showPicker) {
+    html += `<div class="picker-card">
+      <div class="picker-header">
+        <span class="picker-title">Choose exercise</span>
+        <button class="icon-btn" id="closePicker">${icon("x")}</button>
+      </div>
+      <div class="picker-list">
+        ${availableToAdd.map(ex => `
+          <button class="picker-item" data-pick="${ex.id}">
+            <div class="icon-circle-sm">${icon(CATEGORY_META[ex.category].icon, 16)}</div>
+            <span style="flex:1;text-align:left">${ex.name}</span>
+            <span class="picker-cat">${CATEGORY_META[ex.category].label}</span>
+          </button>
+        `).join("")}
+      </div>
+      ${!state.showAdd ? `
+        <button class="new-exercise-btn" id="openAdd">${icon("plus", 16)} Create new exercise</button>
+      ` : `
+        <div class="new-exercise-form">
+          <input class="text-input" id="newNameInput" placeholder="Exercise name" value="${state.newName}" />
+          <div class="category-row">
+            ${Object.keys(CATEGORY_META).map(c => `
+              <button class="category-chip ${state.newCategory === c ? "active" : ""}" data-cat="${c}">
+                ${icon(CATEGORY_META[c].icon, 15)} ${CATEGORY_META[c].label}
+              </button>
+            `).join("")}
+          </div>
+          <button class="confirm-btn" id="createExerciseBtn">Create exercise</button>
+        </div>
+      `}
+    </div>`;
+  }
+
+  app.innerHTML = html;
+  bindEvents();
+}
+
+function bindEvents() {
+  const app = document.getElementById("app");
+  const q = sel => app.querySelector(sel);
+  const qa = sel => app.querySelectorAll(sel);
+
+  if (q("#openPicker")) q("#openPicker").onclick = () => { state.showPicker = true; render(); };
+  if (q("#closePicker")) q("#closePicker").onclick = () => { state.showPicker = false; state.showAdd = false; render(); };
+  if (q("#openAdd")) q("#openAdd").onclick = () => { state.showAdd = true; render(); };
+  if (q("#createExerciseBtn")) q("#createExerciseBtn").onclick = createExercise;
+  if (q("#newNameInput")) {
+    const inp = q("#newNameInput");
+    inp.oninput = e => { state.newName = e.target.value; };
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+  }
+
+  qa("[data-cat]").forEach(b => b.onclick = () => { state.newCategory = b.dataset.cat; render(); });
+  qa("[data-pick]").forEach(b => b.onclick = () => addExerciseToSession(b.dataset.pick));
+  qa("[data-toggle]").forEach(b => b.onclick = () => { const id = b.dataset.toggle; state.expanded[id] = state.expanded[id] === false ? true : !state.expanded[id]; render(); });
+  qa("[data-addset]").forEach(b => b.onclick = () => { const [exId, kind] = b.dataset.addset.split("|"); addSet(exId, kind === "warmup"); });
+  qa("[data-remove]").forEach(b => b.onclick = () => { const [exId, setId] = b.dataset.remove.split("|"); removeSet(exId, Number(setId)); });
+
+  qa("[data-weight]").forEach(inp => {
+    inp.oninput = e => { const [exId, setId] = inp.dataset.weight.split("|"); updateSet(exId, Number(setId), "weight", e.target.value); };
+    inp.onblur = () => render();
+  });
+  qa("[data-reps]").forEach(inp => {
+    inp.oninput = e => { const [exId, setId] = inp.dataset.reps.split("|"); updateSet(exId, Number(setId), "reps", e.target.value); };
+    inp.onblur = () => render();
+  });
+  qa("[data-warmup]").forEach(inp => {
+    inp.onchange = e => { const [exId, setId] = inp.dataset.warmup.split("|"); updateSet(exId, Number(setId), "warmup", e.target.checked); render(); };
+  });
+}
+
+render();
+</script>
+</body>
+</html>html>
+</script></div></body></title>W</head>
+</html>
+"
